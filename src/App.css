@@ -1,0 +1,103 @@
+.App {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: calc(18px + 0vmin);
+  color: white;
+}
+
+.App-titleBar {
+  height: 32px;
+  color: black;
+  background-color: white;
+  padding-left: 5px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  -webkit-app-region: drag;
+}
+
+.ScannedProducts {
+  position: relative; /* Ensure the container is positioned */
+  width: 620px;
+  margin: 15px;
+  padding: 10px;
+  height: calc(100vh - 32px - 50px);
+  background: #8fadc0;
+}
+d
+.Product {
+  width: 620px;
+  margin-top: 5px;
+  display: flex;
+  font-size: 16px;
+  text-align: left;
+  align-items: center;
+  border-bottom: 2px solid;
+  border-color: #5f86a0;
+}
+
+.Product-barcode {
+  font-family: monospace;
+  font-size: 14px;
+  width: 125px;
+}
+
+.Product-name {
+  width: 390px;
+}
+
+.Product-price {
+  margin-left: 10px;
+  width: 65px;
+}
+
+.TransactionTotal {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #5f86a0;
+  margin: 15px;
+  padding: 10px;
+  width: 620px;
+}
+
+.TransactionTotal-Table {
+  width: 100%;
+  text-align: right;
+}
+
+.TransactionTotal-Header {
+  text-align: right;
+}
+
+.TransactionTotal-Cost {
+  width: 75px;
+  padding-left: 25px;
+  text-align: right;
+}
+
+.Transaction-DeleteProduct {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  margin: 10px;
+  width: 85px;
+  height: 35px;
+  border: none;
+  background-color: #ff4b4b;
+}
+
+.Transaction-DeleteProduct:hover {
+  background-color: #ff1133;
+}
+
+body {
+  -webkit-app-region: drag;
+}
+
+button, a, select, textarea, table {
+  -webkit-app-region: no-drag;
+}
