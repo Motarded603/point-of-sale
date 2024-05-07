@@ -25,12 +25,16 @@
 const { app, BrowserWindow, protocol, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
-const expressApp = require('./handlers/SQLQueryAPI');
+const SQLQueryAPI = require('./handlers/SQLQueryAPI');
 const BarcodeScanner = require('./handlers/BarcodeScanner');
 
 let mainWindow;
 
-// Create the native browser window
+/*
+
+    Create the native browser window
+
+*/
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 672,
@@ -65,8 +69,11 @@ function createWindow() {
     }
 }
 
-// Setup a local proxy to adjust the paths of requested files when loading
-// them from the local production bundle (e.g.: local fonts, etc...).
+/*
+    Setup a local proxy to adjust the paths of requested files when loading
+    them from the local production bundle (e.g.: local fonts, etc...).
+    function setupLocalFilesNormalizerProxy() {
+*/
 function setupLocalFilesNormalizerProxy() {
     protocol.registerHttpProtocol(
         "file",
@@ -80,24 +87,65 @@ function setupLocalFilesNormalizerProxy() {
     );
 }
 
-// Initiate Barcode Scanner
-BarcodeScanner.initiateBarcodeScanner();
-console.log('Initated Barcode Scanner');
+/*
 
-// Listen for the 'barcodeScanned' event from BarcodeScanner.js
+    SQL Query API 
+    
+*/
+// Listen for if 'sqlapi' event returns 'failed' from SQLQueryAPI.js
+SQLQueryAPI.eventEmitter.on('sqlapi', (status) => {
+    if (status == 'failed') {
+        console.log('Electron.js Error: SQL API initialization failed. See below.')
+    }
+});
+
+// Listen for if 'sqlapi' event returns 'good' from SQLQueryAPI.js
+SQLQueryAPI.eventEmitter.on('sqlapi', (status) => {
+    if (status == 'good') {
+        console.log('Electron.js: SQL API initialization success')
+    }
+});
+
+// Initiate API Server
+SQLQueryAPI.initiateSQLAPI();
+
+/*
+
+    Barcode Scanner Handlers
+
+*/
+// Listen for if 'barcodeScanner' event returns 'failed' from BarcodeScanner.js
+BarcodeScanner.eventEmitter.on('barcodeScanner', (status) => {
+    if (status == 'failed') {
+        console.log('Electron.js Error: Barcode Scanner initialization failed. See below.')
+    }
+});
+
+// Listen for if 'barcodeScanner' event returns 'good' from BarcodeScanner.js
+BarcodeScanner.eventEmitter.on('barcodeScanner', (status) => {
+    if (status == 'good') {
+        console.log('Electron.js: Barcode Scanner initialization success.')
+    }
+});
+
+// Listen for the 'barcode-Scanned' event from BarcodeScanner.js
 BarcodeScanner.eventEmitter.on('barcode-Scanned', (barcode) => {
     console.log('Received Barcode in electron.js:', barcode);
     mainWindow.webContents.send('sendBarcodeToReact', barcode);
     console.log('sendBarcodeToReact,', barcode);
 });
 
+// Initiate Barcode Scanner
+BarcodeScanner.initiateBarcodeScanner();
+
 /*
+
     This method will be called when Electron has finished its initialization
     and is ready to create the browser windows. Some APIs can only be used
     after this event occurs.
+
 */
 app.whenReady().then(() => {
-    console.log('When ready!!')
     createWindow();
     setupLocalFilesNormalizerProxy();
 
@@ -108,20 +156,31 @@ app.whenReady().then(() => {
             createWindow();
         }
     });
+    console.log('Electron.js: has been loaded');
 });
 
-// Quit when all windows are closed, except on macOS.
-// There, it's common for applications and their menu bar to stay active until
-// the user quits explicitly with Cmd + Q.
+/*
+
+    Quit when all windows are closed, except on macOS. There, it's common for
+    applications and their menu bar to stay active until the user quits
+    explicitly with Cmd + Q.
+
+*/
 app.on("window-all-closed", function () {
     if (process.platform !== "darwin") {
         app.quit();
     }
 });
 
-// If your app has no need to navigate or only needs to navigate to known pages,
-// it is a good idea to limit nagivation outright to that known scope,
-// disallowing any other kinds of navigation.
+/*
+
+    Security / Internal Firewall
+
+    If your app has no need to navigate or only needs to navigate to known
+    pages, it is a good idea to limit nagivation outright to that known scope,
+    disallowing any other kinds of navigation.
+    
+*/
 const allowedNavigationDestinations = ["http://point-of-sale.com", "https://youtube.com", "https://reactjs.org"];
 app.on("web-contents-created", (event, contents) => {
     contents.on("will-navigate", (event, navigationUrl) => {

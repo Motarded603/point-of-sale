@@ -17,6 +17,13 @@ This project is a simple point-of-sale system built using Electron for the front
         "user": "[user]",
         "password": "[password]",
         "database": "[database]"
+    },
+    "barcodeCOM": {
+        "path": "COM2",
+        "baudRate": 9600,
+        "parity": "none",
+        "dataBits": 8,
+        "stopBits": 1
     }
 }
 ```

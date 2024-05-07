@@ -4,52 +4,93 @@
     product information as well as transaction history. This may also
     eventually handle certain settings if I find a need.
  */
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const mariadb = require('mariadb');
-const config = require('../config.json');
+const { EventEmitter } = require('events');
 
 const app = express();
 const port = 5000;
 
-// Create a pool of connections to the database
-const pool = mariadb.createPool(config.database);
+const eventEmitter = new EventEmitter();
 
-// Middleware to parse incoming request bodies
-app.use(cors());
-
-app.get('/api/getProduct', async (req, res) => {
-    const barcode = req.query.barcode;
-    //console.log(barcode);
-
+function initiateSQLAPI() {
+    // Check to make sure config.json exists in parent folder before proceeding
     try {
-        // Use the pool to get a connection and query the database
-        const conn = await pool.getConnection();
-        const rows = await conn.query('SELECT * FROM product_info WHERE itemBarcode = ?', [barcode]);
+        const config = require('../config.json');
 
-        //res.send({rows});
-        // Check result to make sure it contains data, then send data as response
-        if (rows.length > 0) {
-            const { itemBarcode, itemName, itemPrice } = rows[0];
-            console.log('/api/getProduct result:', `${itemBarcode}, ${itemName}, Price: ${itemPrice}`);
-            res.send({ itemName, itemPrice });
+        /*
+            MariaDB SQL Pool
+            Check to make sure 'database' exists in 'config.json' and then create
+            a pool of connections to the database.
+        */
+        let pool;
+
+        if (config.database) {
+            try {
+                pool = mariadb.createPool(config.database);
+
+                // Middleware to parse incoming request bodies
+                app.use(cors());
+
+                /*
+                    API to handle getProduct
+                    Expects:
+                        barcode=[insert-barcode]
+                    Returns:
+                        - {itemBarcode}, {itemName}, Price: ${itemPrice}
+                        - 404: Item not found
+                */
+                app.get('/api/getProduct', async (req, res) => {
+                    const barcode = req.query.barcode;
+                    //console.log(barcode);
+
+                    try {
+                        // Use the pool to get a connection and query the database
+                        const conn = await pool.getConnection();
+                        const rows = await conn.query('SELECT * FROM product_info WHERE itemBarcode = ?', [barcode]);
+
+                        //res.send({rows});
+                        // Check result to make sure it contains data, then send data as response
+                        if (rows.length > 0) {
+                            const { itemBarcode, itemName, itemPrice } = rows[0];
+                            console.log('/api/getProduct result:', `${itemBarcode}, ${itemName}, Price: ${itemPrice}`);
+                            res.send({ itemName, itemPrice });
+                        } else {
+                            console.log('/api/getProduct result:', `Item not found: ${barcode}`);
+                            res.status(404).send('Item not found');
+                        }
+
+                        // Release the connection back to the pool
+                        conn.release();
+                    } catch (err) {
+                        console.error('SQLQueryAPI.js Error: querying database:', err);
+                        res.status(500).send('Internal Server Error');
+                    }
+                });
+
+                // Start the server
+                app.listen(port, () => {
+                    console.log(`SQLQueryAPI.js: Server running at http://localhost:${port}`);
+                    eventEmitter.emit('sqlapi', 'good');
+                });
+            } catch (err) {
+                eventEmitter.emit('sqlapi', 'failed');
+                console.error('SQLQueryAPI.js Error: creating database pool:', err);
+            }
         } else {
-            console.log('/api/getProduct result:', `Item not found: ${barcode}`);
-            res.status(404).send('Item not found');
+            eventEmitter.emit('sqlapi', 'failed');
+            console.error('SQLQueryAPI.js Error: database is not defined in config.json!');
         }
-
-        // Release the connection back to the pool
-        conn.release();
     } catch (err) {
-        console.error('Error querying database:', err);
-        res.status(500).send('Internal Server Error');
+        eventEmitter.emit('sqlapi', 'failed');
+        console.error('SQLQueryAPI.js Error: loading config.json:', err);
+        console.error('SQLQueryAPI.js Error: Make sure config.json exists and is valid JSON.');
     }
-});
 
-// Start the server
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
+    //module.exports = app;
+}
 
-module.exports = app; // Export the app instance
-    
+module.exports.initiateSQLAPI = initiateSQLAPI;
+module.exports.eventEmitter = eventEmitter;
