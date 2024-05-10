@@ -87,8 +87,24 @@ export default function App() {
       .catch(error => {
           console.error('Error:', error);
       });
-});
-}, []);
+    });
+  }, []);
+
+  window.electron.getSQLAPIStatus().then(status => {
+    if (status === 'failed') {
+      console.log('App.js Error: Acknowledges - SQLQueryAPI.status:', status);
+    } else if (status === 'good') {
+      console.log('App.js: Acknowledges - SQLQueryAPI.status:', status);
+    }
+  });
+
+  window.electron.getBarcodeScannerStatus().then(status => {
+    if (status === 'failed') {
+      console.log('App.js Error: Acknowledges - BarcodeScanner.status:', status);
+    } else if (status === 'good') {
+      console.log('App.js: Acknowledges - BarcodeScanner.status:', status);
+    }
+  });
 
   return (
     // Default HTML file produced by React.

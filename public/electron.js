@@ -92,19 +92,20 @@ function setupLocalFilesNormalizerProxy() {
     SQL Query API 
     
 */
-// Listen for if 'sqlapi' event returns 'failed' from SQLQueryAPI.js
+// Listen for if 'sqlapi' event returns from SQLQueryAPI.js
 SQLQueryAPI.eventEmitter.on('sqlapi', (status) => {
     if (status == 'failed') {
-        console.log('Electron.js Error: SQL API initialization failed. See below.')
+        console.log('electron.js Error: SQL API initialization failed. See below.')
+    } else if (status == 'good') {
+        console.log('electron.js: SQL API initialization success')
     }
 });
 
-// Listen for if 'sqlapi' event returns 'good' from SQLQueryAPI.js
-SQLQueryAPI.eventEmitter.on('sqlapi', (status) => {
-    if (status == 'good') {
-        console.log('Electron.js: SQL API initialization success')
-    }
-});
+// Handle when Renderer needs to get the status of SQLQueryAPI
+ipcMain.handle('getSQLAPIStatus', () => {
+    console.log('electron.js: SQLQueryAPI.status:', SQLQueryAPI.getStatus());
+    return SQLQueryAPI.getStatus();
+})
 
 // Initiate API Server
 SQLQueryAPI.initiateSQLAPI();
@@ -114,19 +115,20 @@ SQLQueryAPI.initiateSQLAPI();
     Barcode Scanner Handlers
 
 */
-// Listen for if 'barcodeScanner' event returns 'failed' from BarcodeScanner.js
+// Listen for if 'barcodeScanner' event returns from BarcodeScanner.js
 BarcodeScanner.eventEmitter.on('barcodeScanner', (status) => {
     if (status == 'failed') {
-        console.log('Electron.js Error: Barcode Scanner initialization failed. See below.')
+        console.log('electron.js Error: Barcode Scanner initialization failed. See below.')
+    } else if (status == 'good') {
+        console.log('electron.js: Barcode Scanner initialization success.')
     }
 });
 
-// Listen for if 'barcodeScanner' event returns 'good' from BarcodeScanner.js
-BarcodeScanner.eventEmitter.on('barcodeScanner', (status) => {
-    if (status == 'good') {
-        console.log('Electron.js: Barcode Scanner initialization success.')
-    }
-});
+// Handle when Renderer needs to get the status of BarcodeScanner
+ipcMain.handle('getBarcodeScannerStatus', () => {
+    console.log('electron.js: BarcodeScanner.status:', BarcodeScanner.getStatus());
+    return BarcodeScanner.getStatus();
+})
 
 // Listen for the 'barcode-Scanned' event from BarcodeScanner.js
 BarcodeScanner.eventEmitter.on('barcode-Scanned', (barcode) => {
@@ -156,7 +158,7 @@ app.whenReady().then(() => {
             createWindow();
         }
     });
-    console.log('Electron.js: has been loaded');
+    console.log('electron.js: has been loaded');
 });
 
 /*

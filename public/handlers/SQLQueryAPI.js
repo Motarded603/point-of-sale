@@ -15,6 +15,8 @@ const port = 5000;
 
 const eventEmitter = new EventEmitter();
 
+let status = '';
+
 function initiateSQLAPI() {
     // Check to make sure config.json exists in parent folder before proceeding
     try {
@@ -73,18 +75,18 @@ function initiateSQLAPI() {
                 // Start the server
                 app.listen(port, () => {
                     console.log(`SQLQueryAPI.js: Server running at http://localhost:${port}`);
-                    eventEmitter.emit('sqlapi', 'good');
+                    setStatus('good');
                 });
             } catch (err) {
-                eventEmitter.emit('sqlapi', 'failed');
+                setStatus('failed');
                 console.error('SQLQueryAPI.js Error: creating database pool:', err);
             }
         } else {
-            eventEmitter.emit('sqlapi', 'failed');
+            setStatus('failed');
             console.error('SQLQueryAPI.js Error: database is not defined in config.json!');
         }
     } catch (err) {
-        eventEmitter.emit('sqlapi', 'failed');
+        setStatus('failed');
         console.error('SQLQueryAPI.js Error: loading config.json:', err);
         console.error('SQLQueryAPI.js Error: Make sure config.json exists and is valid JSON.');
     }
@@ -92,5 +94,15 @@ function initiateSQLAPI() {
     //module.exports = app;
 }
 
+function setStatus(newStatus) {
+    eventEmitter.emit('sqlapi', newStatus);
+    status = newStatus;
+}
+
+function getStatus() {
+    return status;
+}
+
 module.exports.initiateSQLAPI = initiateSQLAPI;
 module.exports.eventEmitter = eventEmitter;
+module.exports.getStatus = getStatus;

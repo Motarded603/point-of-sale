@@ -14,6 +14,7 @@ const { SerialPort } = require('serialport');
 const { EventEmitter } = require('events');
 
 let barcodeData = '';
+let status = '';
 
 const eventEmitter = new EventEmitter();
 
@@ -26,7 +27,7 @@ function initiateBarcodeScanner() {
                 // Create Serial Port connection 
                 const port = new SerialPort(config.barcodeCOM);
                 console.log('BarcodeScanner.js: Barcode Scanner Initiated');
-                eventEmitter.emit('barcodeScanner', 'good');
+                setStatus('good');
             
                 // Add appropriate error handling for port and database
                 port.on('error', (err) => {
@@ -52,19 +53,29 @@ function initiateBarcodeScanner() {
                     }
                 });
             } catch (err) {
-                eventEmitter.emit('barcodeScanner', 'failed');
+                setStatus('failed');
                 console.error('BarcodeScanner.js Error: initializing barcode scanner:', err);
             }
         } else {
-            eventEmitter.emit('barcodeScanner', 'failed');
+            setStatus('failed');
             console.error('BarcodeScanner.js Error: barcodeCOM is not defined in config.json!');
         }
     } catch (err) {
-        eventEmitter.emit('barcodeScanner', 'failed');
+        setStatus('failed');
         console.error('BarcodeScanner.js Error: loading config.json:', err);
         console.error('BarcodeScanner.js Error: Make sure config.json exists and is valid JSON.');
     }
 }
 
+function setStatus(newStatus) {
+    eventEmitter.emit('barcodeScanner', newStatus);
+    status = newStatus;
+}
+
+function getStatus() {
+    return status;
+}
+
 module.exports.initiateBarcodeScanner = initiateBarcodeScanner;
 module.exports.eventEmitter = eventEmitter;
+module.exports.getStatus = getStatus;

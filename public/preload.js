@@ -12,12 +12,28 @@ process.once("loaded", () => {
       }
     },
     receive: (channel, func) => {
-      let validChannels = ['fromMain', 'sendBarcodeToReact']; // Add 'barcodeScanned' to the valid channels
+      let validChannels = ['fromMain', 'sendBarcodeToReact']; // Add 'sendBarcodeToReact' to the valid channels
       if (validChannels.includes(channel)) {
           // Deliberately strip event as it includes `sender` 
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
-    }
+    },
+    receive: (channel, func) => {
+      let validChannels = ['fromMain', 'barcodeScanner']; // Add 'barcodeScanner' to the valid channels
+      if (validChannels.includes(channel)) {
+          // Deliberately strip event as it includes `sender` 
+          ipcRenderer.on(channel, (event, ...args) => func(...args));
+      }
+    },
+    getBarcodeScannerStatus: () => ipcRenderer.invoke('getBarcodeScannerStatus'),
+    receive: (channel, func) => {
+      let validChannels = ['fromMain', 'sqlapi']; // Add 'sqlapi' to the valid channels
+      if (validChannels.includes(channel)) {
+          // Deliberately strip event as it includes `sender` 
+          ipcRenderer.on(channel, (event, ...args) => func(...args));
+      }
+    },
+    getSQLAPIStatus: () => ipcRenderer.invoke('getSQLAPIStatus')
   });
 
   console.log('Loaded in preload.js');
